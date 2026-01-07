@@ -1,0 +1,33 @@
+[package]
+name = "rmcp-weather"
+version = "0.1.0"
+edition = "2021"
+description = "MCP server for weather information"
+license = "MIT"
+repository = "https://github.com/sqrew/rmcp-weather"
+
+[[bin]]
+name = "rmcp-weather"
+path = "src/main.rs"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+rmcp = { version = "0.12", features = ["server", "transport-io"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+schemars = "1.0"
+reqwest = { version = "0.12", features = ["json"] }
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+urlencoding = "2.1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

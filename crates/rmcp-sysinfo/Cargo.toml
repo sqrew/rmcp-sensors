@@ -1,0 +1,32 @@
+[package]
+name = "rmcp-sysinfo"
+version = "0.1.0"
+edition = "2021"
+description = "MCP server for system information (CPU, memory, disk, etc.)"
+license = "MIT"
+repository = "https://github.com/sqrew/rmcp-sysinfo"
+
+[[bin]]
+name = "rmcp-sysinfo"
+path = "src/main.rs"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+rmcp = { version = "0.12", features = ["server", "transport-io"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+schemars = "1.0"
+sysinfo = "0.35"
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

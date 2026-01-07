@@ -1,0 +1,68 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/rmcp-display",
+    "crates/rmcp-idle",
+    "crates/rmcp-network",
+    "crates/rmcp-usb",
+    "crates/rmcp-battery",
+    "crates/rmcp-bluetooth",
+    "crates/rmcp-git",
+    "crates/rmcp-sysinfo",
+    "crates/rmcp-weather",
+]
+
+[package]
+name = "claude-sensors"
+version = "0.1.0"
+edition = "2021"
+description = "Cross-platform environmental awareness for AI assistants - a suite of MCP servers"
+license = "MIT"
+repository = "https://github.com/sqrew/claude-sensors"
+keywords = ["mcp", "claude", "ai", "sensors", "environment"]
+categories = ["command-line-utilities", "development-tools"]
+
+[[bin]]
+name = "claude-sensors"
+path = "src/main.rs"
+
+[dependencies]
+# MCP framework
+rmcp = { version = "0.12", features = ["server", "transport-io"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+schemars = "1.0"
+anyhow = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Sensor crates (from workspace)
+rmcp-display = { path = "crates/rmcp-display" }
+rmcp-idle = { path = "crates/rmcp-idle" }
+rmcp-network = { path = "crates/rmcp-network" }
+rmcp-usb = { path = "crates/rmcp-usb" }
+rmcp-battery = { path = "crates/rmcp-battery" }
+rmcp-bluetooth = { path = "crates/rmcp-bluetooth" }
+rmcp-git = { path = "crates/rmcp-git" }
+rmcp-sysinfo = { path = "crates/rmcp-sysinfo" }
+rmcp-weather = { path = "crates/rmcp-weather" }
+
+# Direct sensor dependencies (for unified implementation)
+display-info = "0.5.7"
+user-idle = "0.6"
+network-interface = "2"
+nusb = "0.1"
+battery = "0.7"
+btleplug = "0.11"
+git2 = "0.20"
+sysinfo = "0.32"
+reqwest = { version = "0.12", features = ["json"] }
+chrono = "0.4"
+urlencoding = "2"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
