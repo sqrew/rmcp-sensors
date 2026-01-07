@@ -13,17 +13,17 @@ members = [
 ]
 
 [package]
-name = "claude-sensors"
-version = "0.3.0"
+name = "rmcp-sensors"
+version = "0.4.0"
 edition = "2021"
-description = "Cross-platform environmental awareness for AI assistants - a suite of MCP servers"
+description = "Cross-platform environmental awareness MCP server suite - system info, displays, idle time, network, USB, battery, bluetooth, git, weather"
 license = "MIT"
-repository = "https://github.com/sqrew/claude-sensors"
-keywords = ["mcp", "claude", "ai", "sensors", "environment"]
+repository = "https://github.com/sqrew/rmcp-sensors"
+keywords = ["mcp", "ai", "sensors", "environment", "rmcp"]
 categories = ["command-line-utilities", "development-tools"]
 
 [[bin]]
-name = "claude-sensors"
+name = "rmcp-sensors"
 path = "src/main.rs"
 
 [dependencies]

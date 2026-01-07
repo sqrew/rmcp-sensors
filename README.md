@@ -1,26 +1,26 @@
-# Claude Sensors
+# rmcp-sensors
 
-[![Crates.io](https://img.shields.io/crates/v/claude-sensors.svg)](https://crates.io/crates/claude-sensors)
+[![Crates.io](https://img.shields.io/crates/v/rmcp-sensors.svg)](https://crates.io/crates/rmcp-sensors)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-stable-orange.svg)](https://www.rust-lang.org/)
 
-Cross-platform environmental awareness for AI assistants. A suite of MCP servers that let Claude (or any MCP-compatible AI) perceive your local environment.
+Cross-platform environmental awareness for AI assistants. A suite of MCP servers that let any MCP-compatible AI perceive your local environment.
 
 ## What This Is
 
 A collection of lightweight MCP (Model Context Protocol) servers that expose system information to AI assistants. Each server is standalone, cross-platform, and built in Rust.
 
-Together, they transform Claude from "chatbot in a terminal" to "ambient presence aware of your environment."
+Works with Claude, ChatGPT, or any MCP-compatible client.
 
 ## Installation
 
 ### Unified Binary (Recommended)
 
 ```bash
-cargo install claude-sensors
+cargo install rmcp-sensors
 ```
 
-This gives you **all 14 tools in a single binary**.
+This gives you **all 14+ tools in a single binary**.
 
 ### Individual Sensors
 
@@ -42,19 +42,19 @@ cargo install rmcp-weather   # Weather conditions and forecast
 
 | Server | Tools | What It Sees |
 |--------|-------|--------------|
-| **rmcp-display** | `get_display_info` | Monitors, resolutions, refresh rates, physical sizes |
+| **rmcp-display** | `get_display_info`, `get_display_at_point`, `get_display_by_name` | Monitors, resolutions, refresh rates, physical sizes |
 | **rmcp-idle** | `get_idle_time`, `is_idle_for` | Time since last keyboard/mouse input |
 | **rmcp-network** | `get_interfaces` | Network interfaces, IPs, MACs |
 | **rmcp-usb** | `get_usb_devices` | Connected USB devices with vendor/product info |
 | **rmcp-battery** | `get_battery_status` | Charge level, power state, health, temperature |
 | **rmcp-bluetooth** | `scan_ble_devices` | Nearby Bluetooth Low Energy devices |
-| **rmcp-git** | `get_status`, `get_log` | Repo branch, commits, uncommitted changes |
-| **rmcp-sysinfo** | `get_system_info`, `get_disk_info`, `get_top_processes` | CPU, memory, disk, uptime, processes |
+| **rmcp-git** | `get_status`, `get_log`, `get_branches`, `get_remotes`, `get_tags`, `get_stash_list`, `get_diff_summary`, `get_current_branch` | Full repo awareness |
+| **rmcp-sysinfo** | `get_system_info`, `get_disk_info`, `get_top_processes`, `get_network_stats`, `get_component_temps`, `get_users` | CPU, memory, disk, uptime, processes, temps |
 | **rmcp-weather** | `get_weather`, `get_forecast` | Current conditions and multi-day forecast |
 
 ## Sample Output
 
-Here's what Claude sees when using these sensors:
+Here's what your AI sees when using these sensors:
 
 ### System Info
 ```
@@ -115,14 +115,14 @@ UV Index: 1
 
 ## Configuration
 
-Add to your Claude Code config (`~/.claude.json`):
+Add to your Claude Code config (`~/.claude.json`) or any MCP client config:
 
 ```json
 {
   "mcpServers": {
     "sensors": {
       "type": "stdio",
-      "command": "claude-sensors",
+      "command": "rmcp-sensors",
       "args": [],
       "env": {}
     }
@@ -183,19 +183,17 @@ It's the foundation for **proactive AI** — assistants that exist in your space
 ## Building from Source
 
 ```bash
-git clone https://github.com/sqrew/claude-sensors
-cd claude-sensors
+git clone https://github.com/sqrew/rmcp-sensors
+cd rmcp-sensors
 cargo build --release
 
-# Unified binary at target/release/claude-sensors
+# Unified binary at target/release/rmcp-sensors
 # Individual binaries in crates/*/target/release/
 ```
 
 ## Related Projects
 
 - [`rmcp`](https://crates.io/crates/rmcp) — The Rust MCP framework these servers are built on
-- [`rmcp-breakrs`](https://crates.io/crates/rmcp-breakrs) — Desktop reminder/timer MCP server
-- [`rmcp-i3`](https://crates.io/crates/rmcp-i3) — i3 window manager control via MCP
 
 ## License
 
@@ -203,4 +201,4 @@ MIT
 
 ---
 
-Built with Claude. For Claude. By [sqrew](https://github.com/sqrew).
+Built by [sqrew](https://github.com/sqrew).
