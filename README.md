@@ -1,5 +1,9 @@
 # Claude Sensors
 
+[![Crates.io](https://img.shields.io/crates/v/claude-sensors.svg)](https://crates.io/crates/claude-sensors)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Rust](https://img.shields.io/badge/rust-stable-orange.svg)](https://www.rust-lang.org/)
+
 Cross-platform environmental awareness for AI assistants. A suite of MCP servers that let Claude (or any MCP-compatible AI) perceive your local environment.
 
 ## What This Is
@@ -48,9 +52,70 @@ cargo install rmcp-weather   # Weather conditions and forecast
 | **rmcp-sysinfo** | `get_system_info`, `get_disk_info`, `get_top_processes` | CPU, memory, disk, uptime, processes |
 | **rmcp-weather** | `get_weather`, `get_forecast` | Current conditions and multi-day forecast |
 
+## Sample Output
+
+Here's what Claude sees when using these sensors:
+
+### System Info
+```
+System Information:
+
+CPU: Intel(R) Core(TM) i5-6500 CPU @ 3.20GHz (4 cores)
+CPU Usage: 12.3%
+
+Memory: 5.2 GB / 46.8 GB (11%)
+Swap: 0 B / 0 B
+
+Disk: 105.2 GB / 333.5 GB free
+
+Uptime: 35h 25m
+Load Average: 1.80 2.04 1.83 (1m 5m 15m)
+```
+
+### Idle Time
+```
+User Idle Time:
+
+  Raw: 847 seconds
+  Formatted: 14m 7s
+```
+
+### USB Devices
+```
+USB Devices:
+
+1. USB Optical Mouse
+   Manufacturer: Logitech
+   Vendor ID: 046d, Product ID: c077
+   Bus: 1, Device: 27
+
+2. Xbox Series X Controller
+   Manufacturer: BDA
+   Vendor ID: 20d6, Product ID: 2001
+   Bus: 1, Device: 7
+
+3. Huion Tablet_H1161
+   Manufacturer: HUION
+   Vendor ID: 256c, Product ID: 0064
+   Bus: 1, Device: 6
+
+Total: 10 USB devices
+```
+
+### Weather
+```
+Weather for Portland, Maine:
+Conditions: Partly cloudy
+Temperature: 28°F / -2°C
+Feels like: 21°F / -6°C
+Humidity: 65%
+Wind: 8 mph NW
+UV Index: 1
+```
+
 ## Configuration
 
-Add to your Claude config (`~/.claude.json` or equivalent):
+Add to your Claude Code config (`~/.claude.json`):
 
 ```json
 {
@@ -89,30 +154,31 @@ These sensors change that. An AI with environmental awareness can:
 - See you're on battery at 10% and suggest saving work
 - Know your git repo has uncommitted changes before you close the terminal
 - Detect when you return and greet you
+- Check the weather before you head out
 
-It's the foundation for proactive AI — assistants that exist in your space, not just your chat window.
+It's the foundation for **proactive AI** — assistants that exist in your space, not just your chat window.
 
 ## Tech Stack
 
-- Pure Rust, single binaries
-- Cross-platform (Linux, macOS, Windows)
-- MCP protocol via [`rmcp`](https://crates.io/crates/rmcp) crate
-- Minimal dependencies
-- Release-optimized (LTO, stripped)
+- **Pure Rust** — Single static binaries, no runtime dependencies
+- **Cross-platform** — Linux, macOS, Windows
+- **MCP Protocol** — Via the [`rmcp`](https://crates.io/crates/rmcp) crate
+- **Minimal footprint** — ~5MB unified binary with all sensors
+- **Release-optimized** — LTO, single codegen unit, stripped symbols
 
 ### Platform Crates Used
 
-| Sensor | Crate |
-|--------|-------|
-| Display | `display-info` |
-| Idle | `user-idle` |
-| Network | `network-interface` |
-| USB | `nusb` |
-| Battery | `battery` |
-| Bluetooth | `btleplug` |
-| Git | `git2` |
-| System | `sysinfo` |
-| Weather | `reqwest` (wttr.in API) |
+| Sensor | Crate | Notes |
+|--------|-------|-------|
+| Display | [`display-info`](https://crates.io/crates/display-info) | X11, Wayland, Win32, macOS |
+| Idle | [`user-idle`](https://crates.io/crates/user-idle) | X11, Win32, macOS |
+| Network | [`network-interface`](https://crates.io/crates/network-interface) | All platforms |
+| USB | [`nusb`](https://crates.io/crates/nusb) | Pure Rust, no libusb |
+| Battery | [`battery`](https://crates.io/crates/battery) | All platforms |
+| Bluetooth | [`btleplug`](https://crates.io/crates/btleplug) | BLE on all platforms |
+| Git | [`git2`](https://crates.io/crates/git2) | libgit2 bindings |
+| System | [`sysinfo`](https://crates.io/crates/sysinfo) | All platforms |
+| Weather | [`reqwest`](https://crates.io/crates/reqwest) | wttr.in API |
 
 ## Building from Source
 
@@ -125,10 +191,16 @@ cargo build --release
 # Individual binaries in crates/*/target/release/
 ```
 
+## Related Projects
+
+- [`rmcp`](https://crates.io/crates/rmcp) — The Rust MCP framework these servers are built on
+- [`rmcp-breakrs`](https://crates.io/crates/rmcp-breakrs) — Desktop reminder/timer MCP server
+- [`rmcp-i3`](https://crates.io/crates/rmcp-i3) — i3 window manager control via MCP
+
 ## License
 
 MIT
 
 ---
 
-Part of the Claude Ambient Suite. Built with Claude.
+Built with Claude. For Claude. By [sqrew](https://github.com/sqrew).
