@@ -55,6 +55,18 @@ pub struct LocationParams {
 }
 
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
+pub struct FindProcessParams {
+    #[schemars(description = "Process name to search for (case-insensitive, partial match)")]
+    pub name: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, JsonSchema)]
+pub struct ProcessIdParams {
+    #[schemars(description = "Process ID (PID) to get details for")]
+    pub pid: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct ForecastParams {
     #[schemars(description = "Location to get forecast for")]
     pub location: String,
@@ -908,6 +920,150 @@ impl SensorsServer {
                 proc.name().to_string_lossy()
             ));
         }
+
+        Ok(CallToolResult::success(vec![Content::text(output)]))
+    }
+
+    #[rmcp::tool(description = "Find processes by name (case-insensitive, partial match)")]
+    pub async fn find_process(
+        &self,
+        Parameters(params): Parameters<FindProcessParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let mut sys = System::new_all();
+        std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
+        sys.refresh_all();
+
+        let search = params.name.to_lowercase();
+        let mut matches: Vec<_> = sys
+            .processes()
+            .values()
+            .filter(|p| p.name().to_string_lossy().to_lowercase().contains(&search))
+            .collect();
+
+        matches.sort_by(|a, b| {
+            b.cpu_usage()
+                .partial_cmp(&a.cpu_usage())
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+
+        let mut output = format!("Processes matching '{}':\n\n", params.name);
+
+        if matches.is_empty() {
+            output.push_str("No matching processes found.\n");
+        } else {
+            output.push_str(&format!(
+                "{:<8} {:<10} {:<10} {}\n",
+                "PID", "CPU%", "Memory", "Name"
+            ));
+            output.push_str(&format!("{:-<50}\n", ""));
+
+            for proc in matches.iter().take(20) {
+                output.push_str(&format!(
+                    "{:<8} {:<10.1} {:<10} {}\n",
+                    proc.pid(),
+                    proc.cpu_usage(),
+                    Self::format_bytes(proc.memory()),
+                    proc.name().to_string_lossy()
+                ));
+            }
+
+            if matches.len() > 20 {
+                output.push_str(&format!("\n... and {} more matches\n", matches.len() - 20));
+            }
+
+            output.push_str(&format!("\nTotal matches: {}\n", matches.len()));
+        }
+
+        Ok(CallToolResult::success(vec![Content::text(output)]))
+    }
+
+    #[rmcp::tool(description = "Get detailed information about a specific process by PID")]
+    pub async fn get_process_details(
+        &self,
+        Parameters(params): Parameters<ProcessIdParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let mut sys = System::new_all();
+        std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
+        sys.refresh_all();
+
+        let pid = sysinfo::Pid::from_u32(params.pid);
+
+        let proc = sys.process(pid).ok_or_else(|| {
+            McpError::internal_error(format!("Process {} not found", params.pid), None)
+        })?;
+
+        let mut output = format!("Process Details (PID {}):\n\n", params.pid);
+
+        output.push_str(&format!("Name: {}\n", proc.name().to_string_lossy()));
+        output.push_str(&format!("Status: {:?}\n", proc.status()));
+        output.push_str(&format!("CPU Usage: {:.1}%\n", proc.cpu_usage()));
+        output.push_str(&format!("Memory: {}\n", Self::format_bytes(proc.memory())));
+        output.push_str(&format!("Virtual Memory: {}\n", Self::format_bytes(proc.virtual_memory())));
+
+        if let Some(parent) = proc.parent() {
+            output.push_str(&format!("Parent PID: {}\n", parent));
+        }
+
+        let run_time = proc.run_time();
+        output.push_str(&format!("Running for: {}\n", Self::format_duration(run_time)));
+
+        if let Some(exe) = proc.exe() {
+            output.push_str(&format!("Executable: {}\n", exe.display()));
+        }
+
+        if let Some(cwd) = proc.cwd() {
+            output.push_str(&format!("Working Dir: {}\n", cwd.display()));
+        }
+
+        let cmd = proc.cmd();
+        if !cmd.is_empty() {
+            let cmd_str: Vec<_> = cmd.iter().map(|s| s.to_string_lossy()).collect();
+            let cmd_display = cmd_str.join(" ");
+            if cmd_display.len() > 200 {
+                output.push_str(&format!("Command: {}...\n", &cmd_display[..200]));
+            } else {
+                output.push_str(&format!("Command: {}\n", cmd_display));
+            }
+        }
+
+        Ok(CallToolResult::success(vec![Content::text(output)]))
+    }
+
+    #[rmcp::tool(description = "List all running processes (sorted by CPU usage)")]
+    pub async fn list_processes(&self) -> Result<CallToolResult, McpError> {
+        let mut sys = System::new_all();
+        std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
+        sys.refresh_all();
+
+        let mut processes: Vec<_> = sys.processes().values().collect();
+        processes.sort_by(|a, b| {
+            b.cpu_usage()
+                .partial_cmp(&a.cpu_usage())
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+
+        let mut output = String::from("All Running Processes:\n\n");
+        output.push_str(&format!(
+            "{:<8} {:<10} {:<10} {}\n",
+            "PID", "CPU%", "Memory", "Name"
+        ));
+        output.push_str(&format!("{:-<60}\n", ""));
+
+        for proc in processes.iter().take(50) {
+            output.push_str(&format!(
+                "{:<8} {:<10.1} {:<10} {}\n",
+                proc.pid(),
+                proc.cpu_usage(),
+                Self::format_bytes(proc.memory()),
+                proc.name().to_string_lossy()
+            ));
+        }
+
+        if processes.len() > 50 {
+            output.push_str(&format!("\n... and {} more processes\n", processes.len() - 50));
+        }
+
+        output.push_str(&format!("\nTotal processes: {}\n", processes.len()));
 
         Ok(CallToolResult::success(vec![Content::text(output)]))
     }
